@@ -1,6 +1,6 @@
 # Advent of Code 2024
 
-This year I'm doing it in [Clojure](https://www.clojure.org/).
+I'm solving the [Advent of Code](https://adventofcode.com/) as a way of learning new programming languages. This year I'm doing it in [Clojure](https://www.clojure.org/) to learn another lispy language!
 
 ## Lessons learned
 
