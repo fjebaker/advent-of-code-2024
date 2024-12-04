@@ -13,28 +13,19 @@
 (def EXPECTED
   '(\M \M \S \S))
 
-
 ;; move along each character in each row, then check in every direction if it
 ;; spells XMAS
 
-(defn fetch-direction
-  ([input row col dir steps]
-   (for [i (range steps)]
+(defn fetch-direction [input row col dir]
+   (for [i (range 4)]
      (let [r (+ row (* (first dir) i))
            c (+ col (* (last dir) i))]
        (get (get input r) c))))
-  ([input row col dir]
-   (fetch-direction input row col dir 4)))
-
-(defn xmas-in-direction? [input row col dir]
-  (=
-    '(\X \M \A \S)
-    (fetch-direction input row col dir)))
 
 (defn count-xmas-at [input row col]
   (->>
-    (map #(xmas-in-direction? input row col %1) ALL-DIRECTIONS)
-    (filter identity)
+    (map #(fetch-direction input row col %1) ALL-DIRECTIONS)
+    (filter #(= %1 (seq "XMAS")))
     (count)))
 
 ;; for part two, we just look for \A and then try the 4 possible rotations of the X
@@ -43,22 +34,24 @@
   (concat (rest l) (list (first l))))
 
 (defn get-X [input row col]
-   (for [dir diagonals]
+   (for [dir DIAGONALS]
      (let [r (+ row (first dir))
            c (+ col (last dir))]
        (get (get input r) c))))
+
+(defn is-X-mas [cross]
+  (loop [i (range 4)
+         mask EXPECTED]
+    (cond
+      (empty? i) false
+      (= mask cross) true
+      :else (recur (rest i) (rotate mask)))))
 
 (defn has-X-mas? [input row col]
   ; middle must be an \A
   (if (not= (get (get input row) col) \A)
     false
-    (let [X (get-X input row col)]
-      (loop [perm (range 4)
-             expected EXPECTED
-             match false]
-        (if (or match (empty? perm))
-          match
-          (recur (rest perm) (rotate expected) (= expected X)))))))
+    (is-X-mas (get-X input row col))))
 
 ;; main entry
 
