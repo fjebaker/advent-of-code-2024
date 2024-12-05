@@ -1,4 +1,5 @@
 (require '[clojure.string :as str])
+(require '[clojure.set])
 
 (defn swap [v i1 i2] (assoc v i2 (v i1) i1 (v i2)))
 
@@ -22,50 +23,29 @@
                  #(mapv Integer/parseInt (str/split %1 #","))
                  (rest pages)))))
 
-;; part 1 create a map that gives you all the values should should occur BEFORE
-;; a given value. Then, loop over the list and build a list of all those that
-;; must occur _after_ the given location
+(defn has-element? [table el]
+  (boolean (some #{el} table)))
 
-(defn find-first-offender
-  ([table pages] (find-first-offender table pages 0 (sorted-set)))
-  ([table pages start before]
-   (loop [before before
-          i start
-          curr (first (drop start pages))
-          todo (rest (drop start pages))]
-     (let [next-page (first todo)
-           new-before (reduce conj before (get table curr '[]))]
-       (cond
-         (contains? new-before next-page) i ;; the index of the last good item
-         (empty? todo) nil
-         :else
-           (recur
-             new-before
-             (inc i)
-             next-page
-             (rest todo)))))))
-
-;; for part 2
+(defn *comparison [table]
+  (fn [a b]
+    (cond
+      (has-element? (get table a '[]) b) 1
+      (has-element? (get table b '[]) a) -1
+      :else 0)))
 
 (defn fix-pages [table pages]
-   (loop [order pages]
-     (let [index (find-first-offender table order)]
-       (if (nil? index)
-         order
-         (recur (swap order index (inc index)))))))
-
+  (sort (*comparison table) pages))
 
 (defn main [filename]
   (let [[table seqs] (->> (slurp filename)
                           (str/split-lines)
                           (#(split-at (.indexOf %1 "") %1))
                           (parse-input))
-        sol (map #(vector %1 (find-first-offender table %1)) seqs)
-        correctly-ordered (filter (comp nil? last) sol)
-        incorrectly-ordered (filter (comp not nil? last) sol)
-        part1 (apply + (map (comp middle-number first) correctly-ordered))
-        incorrect-now-correct (map #(fix-pages table %1) (mapv first incorrectly-ordered))
-        part2 (apply + (map middle-number incorrect-now-correct))]
+        sorted (map #(vec (fix-pages table %1)) seqs)
+        correct (clojure.set/intersection (set seqs) (set sorted))
+        incorrect (clojure.set/difference (set sorted) (set seqs))
+        part1 (apply + (map middle-number correct))
+        part2 (apply + (map middle-number incorrect))]
     (println "Part 1: " part1)
     (println "Part 2: " part2)))
 
