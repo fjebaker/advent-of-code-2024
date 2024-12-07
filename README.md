@@ -10,3 +10,6 @@ I'm solving the [Advent of Code](https://adventofcode.com/) as a way of learning
 - 04: I'm kind of surprised there is no standard library `rotate` function for rotating the elements of a sequence. And `get` returning `nil` if the index is out of bounds is kind of convenient for implicitly padding a matrix, but it feels like a footgun.
 - 05: Absolutely dislike that `(contains?)` assumes every collection is **map** and so is only checking every 2nd value. I do like every dict is a default dict because you can `(get coll index '[])`! There must be a better way to insert a vector into a sorted set? Probably `into` can do it. I think I reach for `loop` too often, where `reduce` might be better?
 - 06: Vector operations are actually really easy with `(apply + v1 v2)`. And being able to abuse what the return types are is also kind of fun, but it feels incredibly dangerous. And recursion was actually really helpful for this one, although my solution is slow...
+- 07: It seems you can append `'` to an operator to make it do type promotion automatically; for instance, `*'` will automatically expand to `bigint` if needed. Also, brute force is definitely not the answer.
+
+
