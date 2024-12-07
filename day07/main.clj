@@ -1,55 +1,46 @@
 (require '[clojure.string :as str])
-(require '[clojure.math :as math])
 
-(def input (->> (slurp "./day07/test.txt")
-     (str/split-lines)
-     (map #(map bigint (str/split %1 #"[ :]+")))
-     (map #(list (first %1) (rest %1)))))
+(defn remove-tail [from tail]
+  (let [s (str from)
+        new-s (subs s 0 (- (count s) (count (str tail))))]
+    (bigint new-s)))
 
-(defn cat-nums [a b]
-  (bigint (str a b)))
-
-(def OPERATORS (list ['+ +'] ['* *'] ['| cat-nums]))
-
-(def values (first input))
-
-(defn int->ops [i N & {:keys [base] :or {base 2}}]
-  (let [ops (map
-              #(nth OPERATORS (- (int %1) (int \0)))
-              (seq (Integer/toString i base)))]
-    (concat (repeat (- N (count ops)) (first OPERATORS)) ops)))
-
-(defn solve-operators [[target nums] & {:keys [base] :or {base 2}}]
-  (loop [i 0]
-    (let [operators (int->ops i (- (count nums) 1) :base base)]
-      ; (prn (map first operators))
+(defn is-possible [target nums & {:keys [with-concat] :or {with-concat false}}]
+  (loop [target target
+         ; reverse the order of the numbers
+         nums nums]
+    (let [n (first nums)]
       (cond
-        (> i (math/pow base (- (count nums) 1))) nil
-        (=
-          target
-          (reduce
-            (fn [acc item]
-              ((last (first item)) acc (last item)))
-            (first nums) (partition 2 (interleave operators (rest nums))))) target
-        :else (recur (inc i))))))
+        (< target 0) false
+        (= 1 (count nums)) (= target n)
+        (and
+          (= 0 (rem target n))
+          (is-possible
+            (/ target n) (rest nums)
+            :with-concat with-concat)) true
+        (and
+          with-concat
+          (str/ends-with? (subs (str target) 1) (str n))
+          (is-possible
+            (remove-tail target n)
+            (rest nums)
+            :with-concat with-concat)) true
+        :else (recur (- target n) (rest nums))))))
 
-(def solved (map solve-operators input))
-
-(bigint
-  (reduce
-    +
-    0
-    (filter (comp not nil?) solved)))
-
-(def unsolved (map last (filter #(nil? (first %1)) (partition 2 (interleave solved input)))))
-
-(count input)
-(count unsolved)
-
-(bigint
-  (reduce
-    #(+ %1 (first %2))
-    0
-    (filter #((comp not nil?) (solve-operators %1 :base 3)) unsolved)))
+(defn main [filename]
+  (defn- reducer [input f]
+    (reduce + (map first (filter f input))))
+  (let [input (->> (slurp filename)
+                   (str/split-lines)
+                   (map #(map bigint (str/split %1 #"[ :]+")))
+                   (map #(list (first %1) (rest %1))))]
+    (println "Part 1:" (reducer
+                         input
+                         #(is-possible (first %1) (reverse (last %1)))))
+    (println "Part 2:" (reducer
+                         input
+                         #(is-possible (first %1) (reverse (last %1)) :with-concat true)))))
 
 
+(main "./day07/test.txt")
+(main "./day07/input.txt")
