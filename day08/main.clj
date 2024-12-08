@@ -2,8 +2,6 @@
 (require '[clojure.math.combinatorics :as combo])
 (require '[clojure.set])
 
-(def filename "./day08/input.txt")
-
 (defn vec-map
   ([f vs] (vec-map f (first vs) (last vs)))
   ([f a b] (mapv f a b)))
