@@ -37,7 +37,7 @@
       (add-nodes-out-of-map b d map-lims :limit limit)
       (add-nodes-out-of-map a (mapv - d) map-lims :limit limit))))
 
-(def atlas-info
+(defn parse-atlas [filename]
   (let [orig-lines (->> (slurp filename) (str/split-lines))]
     (loop [lines orig-lines
            row 0
@@ -56,20 +56,29 @@
                     (assoc atlas item
                            (conj (get atlas item '[]) [row, col])))))))))
 
-(let [all-nodes (apply
-                  concat
-                  (for [k (keys (first atlas-info))
-                        comb (combo/combinations (get (first atlas-info) k) 2)]
-                    (anti-node-positions
-                      comb
-                      (rest atlas-info)
-                      :limit 100)))
-      all-positions (set
-                      (apply concat (filter #(> (count %1) 1) (vals (first atlas-info)))))
-      ;; filter those nodes that are in the map
-      nodes-on-map (set
-                     (filter #(in-map? (rest atlas-info) %1) all-nodes))]
-  (prn (count all-nodes) (count all-positions) (count nodes-on-map))
-  (count (into nodes-on-map all-positions)))
+(defn find-antinodes [atlas-info limit]
+  (let [all-nodes (apply
+                    concat
+                    (for [k (keys (first atlas-info))
+                          comb (combo/combinations (get (first atlas-info) k) 2)]
+                      (anti-node-positions
+                        comb
+                        (rest atlas-info)
+                        :limit limit)))
+        all-positions (set
+                        (apply concat (filter #(> (count %1) 1) (vals (first atlas-info)))))
+        ;; filter those nodes that are in the map
+        nodes-on-map (set
+                       (filter #(in-map? (rest atlas-info) %1) all-nodes))]
+    (count (into nodes-on-map all-positions))))
 
 
+(defn main [filename]
+  (let [atlas-info (parse-atlas filename)
+        part1 (find-antinodes atlas-info 1)
+        part2 (find-antinodes atlas-info 1000)]
+    (println "Part 1: " part1)
+    (println "Part 2: " part2)))
+
+(main "./day08/test.txt")
+(main "./day08/input.txt")
