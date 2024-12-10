@@ -14,13 +14,6 @@
         new-gap (assoc gap :blocks (conj (:blocks gap) gap-block))]
     (list new-gap new-block)))
 
-(def input
-  (->> (slurp "./day09/input.txt")
-     (str/split-lines)
-     (first)
-     (seq)
-     (map #(- (int %1) (int \0)))))
-
 
 (defn parse-input [input]
   (loop [input input
@@ -43,12 +36,9 @@
               (conj gaps (->Gap (first input) '[] pos))
               blocks))))
 
-(def inp (parse-input input))
 
 ;; this would be so much easier with mutable data structures
 (defn interweave [blocks gaps]
-  ; (println "Blocks" blocks)
-  ; (println "Gaps" gaps)
   (loop [blocks blocks
          gaps gaps
          acc '[]
@@ -59,7 +49,7 @@
         (recur (rest blocks) gaps (conj acc (first blocks)) false)
         (recur blocks (rest gaps) (into acc (:blocks (first gaps))) true)))))
 
-(def result (let [[blocks gaps] inp]
+(defn part1 [[blocks gaps]]
   (loop [block-index (- (count blocks) 2) ; head of the block array
          gap-index 0 ; head of the gaps array
          block (last blocks) ; the current block we are manipulating
@@ -84,7 +74,18 @@
       :else
       ;; add the current block to the gap
       (let [[new-gap new-block] (add-block gap block)]
-        (recur block-index gap-index new-block new-gap result))))))
+        (recur block-index gap-index new-block new-gap result)))))
+
+(defn part1-score [result]
+  (loop [result (drop-last result)
+         index 0
+         score 0]
+    (if (empty? result) score
+      (let [block (first result)]
+        (recur
+          (rest result)
+          (+ index (:size block))
+          (apply + score (map #(* (:id block) (+ %1 index)) (range (:size block)))))))))
 
 (defn score-gap [gap]
   (loop [blocks (:blocks gap)
@@ -109,7 +110,8 @@
         (let [cur (first all)]
           (recur (rest all) (+ score (if (instance? Gap cur) (score-gap cur) (score-block cur)))))))))
 
-(def result-2 (let [[blocks gaps] inp]
+(defn part2 [[blocks gaps]]
+  (def NUM-GAPS (count gaps))
   (loop [blocks (reverse blocks) ; start at the back
          block-index (dec (count blocks))
          unchanged-blocks '[]
@@ -119,24 +121,25 @@
             ;; find a place where it can fit
             gap-index (loop [i 0]
                         (cond
-                          (>= i (count gaps)) nil
+                          (>= i NUM-GAPS) nil
                           (>= (capacity (nth gaps i)) (:size block)) i
                           :else
                           (recur (inc i))))]
         (if (or (nil? gap-index) (< block-index gap-index)) ;; there wasn't anywhere to fit this one
           (recur (rest blocks) (dec block-index) (conj unchanged-blocks block) gaps)
           (let [[gap _] (add-block (nth gaps gap-index) block)]
-            (recur (rest blocks) (dec block-index) unchanged-blocks (assoc gaps gap-index gap)))))))))
+            (recur (rest blocks) (dec block-index) unchanged-blocks (assoc gaps gap-index gap))))))))
 
-(prn result-2)
+(defn main [filename]
+  (let [input (parse-input (->> (slurp filename)
+                             (str/split-lines)
+                             (first)
+                             (seq)
+                             (map #(- (int %1) (int \0)))))
+        part1 (part1-score (part1 input))
+        part2 (part2 input)]
+    (println "Part 1:" part1)
+    (println "Part 2:" part2)))
 
-(loop [result (drop-last result)
-       index 0
-       score 0]
-  (if (empty? result) score
-    (let [block (first result)]
-      (recur
-        (rest result)
-        (+ index (:size block))
-        (apply + score (map #(* (:id block) (+ %1 index)) (range (:size block))))))))
-
+(main "./day09/test.txt")
+(time (main "./day09/input.txt"))
