@@ -12,5 +12,5 @@ I'm solving the [Advent of Code](https://adventofcode.com/) as a way of learning
 - 06: Vector operations are actually really easy with `(apply + v1 v2)`. And being able to abuse what the return types are is also kind of fun, but it feels incredibly dangerous. And recursion was actually really helpful for this one, although my solution is slow...
 - 07: It seems you can append `'` to an operator to make it do type promotion automatically; for instance, `*'` will automatically expand to `bigint` if needed. Also, brute force is definitely not the answer.
 - 08: Vector manipulations are easiest when abstracted into small functions. I made too many mistakes trying to write the `(mapv (apply))` in-place.
-
+- 09: This day seemed unusually tricky in Clojure. I think I could have made my first part much more straight forward with using `assoc` to effectively "mutate" the vector. Also learned that `concat` is lazy, and can easily lead to overflowed stacks, so better to use `into` unless there's a reason to defer evaluation.
 
